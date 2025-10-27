@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main_app',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +75,10 @@ WSGI_APPLICATION = 'jaar_app_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+CORS_ALLOWED_ORIGINS = [
+     'http://localhost:5173'
+
+    ]
  
 DATABASES = {
     'default': {
