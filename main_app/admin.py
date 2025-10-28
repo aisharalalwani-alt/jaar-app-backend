@@ -1,3 +1,9 @@
 from django.contrib import admin
+from django.contrib import admin
+from .models import NeighborProfile, Post, Event, Volunteer
 
-# Register your models here.
+admin.site.register(NeighborProfile)
+admin.site.register(Post)
+admin.site.register(Event)
+admin.site.register(Volunteer)
+
