@@ -4,6 +4,8 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Post, Event, Volunteer, NeighborProfile
 from .serializers import PostSerializer, EventSerializer, VolunteerSerializer, NeighborProfileSerializer
+from rest_framework.permissions import IsAuthenticated
+
 
 # ------------------ POSTS ------------------
 class PostListCreateView(APIView):
@@ -143,3 +145,27 @@ class NeighborDetailView(APIView):
         neighbor = get_object_or_404(NeighborProfile, id=pk)
         neighbor.delete()
         return Response({"message": f"Neighbor {pk} deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+   
+class JoinEventView(APIView):
+    """
+    API for a neighbor to join an event
+    without using any permission class
+    """
+
+    def post(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+
+        neighbor = get_object_or_404(NeighborProfile, user=request.user)
+
+        volunteer, created = Volunteer.objects.get_or_create(
+            name=neighbor.user.username,
+            phone=neighbor.phone
+        )
+
+        volunteer.events.add(event)
+        volunteer.save()
+
+        return Response({
+            "message": f"{neighbor.user.username} joined {event.title} successfully!"
+        }, status=status.HTTP_200_OK)

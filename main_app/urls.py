@@ -22,4 +22,6 @@ urlpatterns = [
     # Neighbors
     path('api/neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
     path('api/neighbors/<int:pk>/', NeighborDetailView.as_view(), name='neighbor_detail'),
+    path('api/events/<int:event_id>/join/', JoinEventView.as_view(), name='join-event'),
+
 ]
