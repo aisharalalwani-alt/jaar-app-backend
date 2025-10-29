@@ -3,7 +3,11 @@ from .views import (
     PostListCreateView, PostDetailView,
     EventListCreateView, EventDetailView,
     VolunteerListCreateView, VolunteerDetailView,
-    NeighborListCreateView, NeighborDetailView,
+    NeighborListCreateView, NeighborDetailView,JoinEventView,
+)
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
 )
 
 urlpatterns = [
@@ -24,4 +28,7 @@ urlpatterns = [
     path('api/neighbors/<int:pk>/', NeighborDetailView.as_view(), name='neighbor_detail'),
     path('api/events/<int:event_id>/join/', JoinEventView.as_view(), name='join-event'),
 
+    # JWT Auth  
+    path('login/', TokenObtainPairView.as_view(), name='login'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),   
 ]
