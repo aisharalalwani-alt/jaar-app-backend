@@ -4,7 +4,7 @@ from .views import (
     PostListCreateView, PostDetailView,
     EventListCreateView, EventDetailView,
     VolunteerListCreateView, VolunteerDetailView,
-    NeighborListCreateView, JoinEventView, SignupUserView,
+    NeighborListCreateView, JoinEventView, SignupUserView, LogoutView,
 )
 
 urlpatterns = [
@@ -27,5 +27,6 @@ urlpatterns = [
     # JWT Authentication
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-     path('api/signup/', SignupUserView.as_view(), name='signup'),
+    path('api/signup/', SignupUserView.as_view(), name='signup'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
 ]
