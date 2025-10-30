@@ -2,9 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
+from django.contrib.auth.models import User
 from .models import Post, Event, Volunteer, NeighborProfile
 from .serializers import PostSerializer, EventSerializer, VolunteerSerializer, NeighborProfileSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
 # ------------------ POSTS ------------------
 class PostListCreateView(APIView):
@@ -268,3 +270,39 @@ class JoinEventView(APIView):
         return Response({
             "message": f"{neighbor.user.username} joined {event.title} successfully!"
         }, status=status.HTTP_200_OK)
+
+# ------------------ USER SIGNUP ------------------
+
+class SignupUserView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Signup a new user.
+        Required fields: username, password. Email is optional.
+        """
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({
+                'error': "Please provide a username and password"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'error': "Username already exists"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        }, status=status.HTTP_201_CREATED)
