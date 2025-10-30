@@ -1,13 +1,10 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     PostListCreateView, PostDetailView,
     EventListCreateView, EventDetailView,
     VolunteerListCreateView, VolunteerDetailView,
-    NeighborListCreateView, NeighborDetailView,JoinEventView,
-)
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
+    NeighborListCreateView,
 )
 
 urlpatterns = [
@@ -25,10 +22,9 @@ urlpatterns = [
 
     # Neighbors
     path('api/neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
-    path('api/neighbors/<int:pk>/', NeighborDetailView.as_view(), name='neighbor_detail'),
-    path('api/events/<int:event_id>/join/', JoinEventView.as_view(), name='join-event'),
+    path('api/events/<int:event_id>/join/', JoinEventView.as_view(), name='join_event'),
 
-    # JWT Auth  
-    path('login/', TokenObtainPairView.as_view(), name='login'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),   
+    # JWT Authentication
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
