@@ -9,24 +9,26 @@ from .views import (
 
 urlpatterns = [
     # Posts
-    path('api/posts/', PostListCreateView.as_view(), name='posts_list_create'),
-    path('api/posts/<int:pk>/', PostDetailView.as_view(), name='post_detail'),
+    path('posts/', PostListCreateView.as_view(), name='posts_list_create'),
+    path('posts/<int:pk>/', PostDetailView.as_view(), name='post_detail'),
 
     # Events
-    path('api/events/', EventListCreateView.as_view(), name='events_list_create'),
-    path('api/events/<int:pk>/', EventDetailView.as_view(), name='event_detail'),
+    path('events/', EventListCreateView.as_view(), name='events_list_create'),
+    path('events/<int:pk>/', EventDetailView.as_view(), name='event_detail'),
 
     # Volunteers
-    path('api/volunteers/', VolunteerListCreateView.as_view(), name='volunteers_list_create'),
-    path('api/volunteers/<int:pk>/', VolunteerDetailView.as_view(), name='volunteer_detail'),
+    path('volunteers/', VolunteerListCreateView.as_view(), name='volunteers_list_create'),
+    path('volunteers/<int:pk>/', VolunteerDetailView.as_view(), name='volunteer_detail'),
 
     # Neighbors
-    path('api/neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
-    path('api/events/<int:event_id>/join/', JoinEventView.as_view(), name='join_event'),
+    path('neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
+    path('events/<int:event_id>/join/', JoinEventView.as_view(), name='join_event'),
 
     # JWT Authentication
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/signup/', SignupUserView.as_view(), name='signup'),
-    path('api/logout/', LogoutView.as_view(), name='logout'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('signup/', SignupUserView.as_view(), name='signup'),
+    
+    path('logout/', LogoutView.as_view(), name='logout'),
+    
 ]
