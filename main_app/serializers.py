@@ -14,17 +14,15 @@ class NeighborProfileSerializer(serializers.ModelSerializer):
 
 # ------------------ POST ------------------
 class PostSerializer(serializers.ModelSerializer):
-    # Show the username of the creator, read-only
-    user = serializers.StringRelatedField(read_only=True)
+    created_by = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user', 'title', 'content', 'created_at']
-        read_only_fields = ['id', 'user', 'created_at']
+        fields = ['id', 'created_by', 'title', 'content', 'created_at']
+        read_only_fields = ['id', 'created_by', 'created_at']
 
-    # Automatically assign current user when creating a post
     def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
+        validated_data['created_by'] = self.context['request'].user.neighborprofile
         return super().create(validated_data)
 
 

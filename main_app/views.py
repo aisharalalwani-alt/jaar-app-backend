@@ -272,13 +272,12 @@ class JoinEventView(APIView):
         }, status=status.HTTP_200_OK)
 
 # ------------------ USER SIGNUP ------------------
-
 class SignupUserView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         """
-        Signup a new user.
+        Signup a new user and automatically create a NeighborProfile.
         Required fields: username, password. Email is optional.
         """
         username = request.data.get('username')
@@ -295,18 +294,28 @@ class SignupUserView(APIView):
                 'error': "Username already exists"
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        #  Create user
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password
         )
 
+        # Automatically create an empty NeighborProfile for this user
+        NeighborProfile.objects.create(
+            user=user,
+            house_number="",
+            street="",
+            phone="",
+            bio=""
+        )
+
         return Response({
             'id': user.id,
             'username': user.username,
-            'email': user.email
+            'email': user.email,
+            'message': "Signup successful! Profile created."
         }, status=status.HTTP_201_CREATED)
-    
 # ------------------ USER LOGOUT ------------------
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
