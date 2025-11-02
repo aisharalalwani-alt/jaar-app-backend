@@ -84,14 +84,19 @@ class EventListCreateView(APIView):
 
     def post(self, request):
         """
-        Create a new event and automatically assign the creator.
+        Create a new event and automatically assign the creator (NeighborProfile).
         """
+        # Get the NeighborProfile for the logged-in user
+        neighbor = get_object_or_404(NeighborProfile, user=request.user)
+
+        # Pass the event data
         serializer = EventSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()  # created_by is assigned in serializer's create()
+            # Save event with NeighborProfile, not User
+            serializer.save(created_by=neighbor)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
 
 class EventDetailView(APIView):
     permission_classes = [IsAuthenticated]

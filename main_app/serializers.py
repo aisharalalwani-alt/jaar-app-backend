@@ -54,10 +54,11 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'description', 'date', 'created_by', 'volunteers']
+        fields = ['id', 'title', 'description', 'date', 'location', 'created_by', 'volunteers']
         read_only_fields = ['id', 'created_by', 'volunteers']
 
-    # Automatically assign current user as event creator
     def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
+        request = self.context.get('request')
+        neighbor = NeighborProfile.objects.get(user=request.user)
+        validated_data['created_by'] = neighbor
         return super().create(validated_data)
