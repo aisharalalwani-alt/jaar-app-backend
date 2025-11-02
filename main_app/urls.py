@@ -22,7 +22,7 @@ urlpatterns = [
 
     # Neighbors
     path('neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
-    path('events/<int:event_id>/join/', JoinEventView.as_view(), name='join_event'),
+    path('join-event/<int:event_id>/', JoinEventView.as_view(), name='join-event'),
     path('my-profile/', MyNeighborProfileView.as_view(), name='my_neighbor_profile'),
 
 

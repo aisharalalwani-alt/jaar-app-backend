@@ -298,24 +298,18 @@ class JoinEventView(APIView):
 
     def post(self, request, event_id):
         """
-        Allow the current user to join an event as a volunteer.
-        Creates a volunteer if not exists, and adds to the event.
+        Allow the authenticated user to join an event as a volunteer.
         """
         event = get_object_or_404(Event, id=event_id)
-        neighbor = get_object_or_404(NeighborProfile, user=request.user)
+        profile = get_object_or_404(NeighborProfile, user=request.user)
 
+        # Create or get existing volunteer record
         volunteer, created = Volunteer.objects.get_or_create(
-            name=neighbor.user.username,
-            phone=neighbor.phone
+            name=profile.user.username,
+            phone=profile.phone,
         )
-
-        if not volunteer.events.filter(id=event.id).exists():
-            volunteer.events.add(event)
-            volunteer.save()
-
-        return Response({
-            "message": f"{neighbor.user.username} joined {event.title} successfully!"
-        }, status=status.HTTP_200_OK)
+        volunteer.events.add(event)
+        return Response({"message": "Joined the event successfully!"})
 
 # ------------------ USER SIGNUP ------------------
 class SignupUserView(APIView):
