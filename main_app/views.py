@@ -244,9 +244,55 @@ class NeighborDetailView(APIView):
 
         neighbor.delete()
         return Response({"message": f"Neighbor {pk} deleted"}, status=status.HTTP_204_NO_CONTENT)
+ # ------------------ MY NEIGHBOR PROFILE ------------------ 
+class MyNeighborProfileView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        """
+        Retrieve the current user's profile along with their posts, 
+        created events, and events they've joined.
+        """
+        # Get the profile of the currently logged-in user
+        neighbor = get_object_or_404(NeighborProfile, user=request.user)
+        profile_data = NeighborProfileSerializer(neighbor).data
 
-# ------------------ JOIN EVENT ------------------
+        # Get posts created by this user
+        posts = Post.objects.filter(created_by=neighbor)
+        posts_data = PostSerializer(posts, many=True).data
+
+        # Get events created by this user
+        created_events = Event.objects.filter(created_by=neighbor)
+        created_events_data = EventSerializer(created_events, many=True).data
+
+        # Get events the user has joined
+        volunteer_entries = Volunteer.objects.filter(
+            name=neighbor.user.username
+        ) | Volunteer.objects.filter(phone=neighbor.phone)
+
+        joined_events = Event.objects.filter(volunteers__in=volunteer_entries).distinct()
+        joined_events_data = EventSerializer(joined_events, many=True).data
+
+        return Response({
+            "profile": profile_data,
+            "posts": posts_data,
+            "created_events": created_events_data,
+            "joined_events": joined_events_data
+        })
+
+    def put(self, request):
+        """
+        Update the profile of the currently logged-in user.
+        """
+        neighbor = get_object_or_404(NeighborProfile, user=request.user)
+        serializer = NeighborProfileSerializer(neighbor, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+ 
+ # ------------------ JOIN EVENT ------------------
 class JoinEventView(APIView):
     permission_classes = [IsAuthenticated]
 

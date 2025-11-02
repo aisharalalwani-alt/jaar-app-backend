@@ -4,7 +4,7 @@ from .views import (
     PostListCreateView, PostDetailView,
     EventListCreateView, EventDetailView,
     VolunteerListCreateView, VolunteerDetailView,
-    NeighborListCreateView, JoinEventView, SignupUserView, LogoutView,
+    NeighborListCreateView, JoinEventView, SignupUserView, LogoutView, MyNeighborProfileView,
 )
 
 urlpatterns = [
@@ -23,6 +23,9 @@ urlpatterns = [
     # Neighbors
     path('neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
     path('events/<int:event_id>/join/', JoinEventView.as_view(), name='join_event'),
+    path('my-profile/', MyNeighborProfileView.as_view(), name='my_neighbor_profile'),
+
+
 
     # JWT Authentication
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
