@@ -38,15 +38,32 @@ class PostDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
-        """Update a post if the current user is the owner. Partial updates allowed."""
+        """Update only title and content if the user owns the post."""
         post = get_object_or_404(Post, id=pk)
         if post.created_by.user != request.user:
-            return Response({"error": "You can only edit your own posts."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "You can only edit your own posts."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
+         
+        allowed_fields = {
+            key: request.data[key]
+            for key in ["title", "content"]
+            if key in request.data
+        }
+
+        serializer = PostSerializer(
+            post,
+            data=allowed_fields,
+            partial=True,
+            context={'request': request}
+        )
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
@@ -186,11 +203,17 @@ class NeighborListCreateView(APIView):
 
     def get(self, request):
         """
-        List all neighbors.
+        List all neighbors with the same street as the current user.
         """
-        neighbors = NeighborProfile.objects.all()
+        try:
+            current_neighbor = NeighborProfile.objects.get(user=request.user)
+            neighbors = NeighborProfile.objects.filter(postal_code=current_neighbor.postal_code).exclude(id=current_neighbor.id)
+        except NeighborProfile.DoesNotExist:
+             neighbors = NeighborProfile.objects.none()
+
         serializer = NeighborProfileSerializer(neighbors, many=True)
         return Response(serializer.data)
+
 
     def post(self, request):
         """

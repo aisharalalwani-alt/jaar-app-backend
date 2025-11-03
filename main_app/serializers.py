@@ -8,7 +8,7 @@ class NeighborProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NeighborProfile
-        fields = ['id', 'user', 'house_number', 'street', 'phone', 'bio']
+        fields = ['id', 'user', 'house_number', 'postal_code',  'street', 'phone', 'bio']
         read_only_fields = ['id', 'user']
 
 
@@ -18,7 +18,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'created_by', 'title',  'image','content', 'created_at']
+        fields = ['id', 'created_by', 'title', 'image','content', 'created_at']
         read_only_fields = ['id', 'created_by', 'created_at']
 
     def create(self, validated_data):

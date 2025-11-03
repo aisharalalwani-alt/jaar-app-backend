@@ -6,6 +6,7 @@ class NeighborProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     house_number = models.CharField(max_length=10)
     street = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=5, blank=True, null=True)
     phone = models.CharField(max_length=15)
     bio = models.TextField(blank=True, null=True)
 
