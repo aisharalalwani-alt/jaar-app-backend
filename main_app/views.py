@@ -13,21 +13,17 @@ class PostListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """
-        List all posts ordered by creation date descending.
-        Only authenticated users can view posts.
-        """
+        """List all posts ordered by creation date descending."""
         posts = Post.objects.all().order_by('-created_at')
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        """
-        Create a new post and automatically assign it to the current user.
-        """
+        """Create a new post and automatically assign it to the current user."""
+        neighbor = get_object_or_404(NeighborProfile, user=request.user)
         serializer = PostSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()  # User is assigned in serializer's create()
+            serializer.save(created_by=neighbor)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -36,20 +32,15 @@ class PostDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        """
-        Retrieve a single post by its ID.
-        """
+        """Retrieve a single post by its ID."""
         post = get_object_or_404(Post, id=pk)
         serializer = PostSerializer(post)
         return Response(serializer.data)
 
     def put(self, request, pk):
-        """
-        Update a post if the current user is the owner.
-        Partial updates allowed.
-        """
+        """Update a post if the current user is the owner. Partial updates allowed."""
         post = get_object_or_404(Post, id=pk)
-        if post.user != request.user:
+        if post.created_by.user != request.user:
             return Response({"error": "You can only edit your own posts."}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
@@ -59,16 +50,13 @@ class PostDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        """
-        Delete a post if the current user is the owner.
-        """
+        """Delete a post if the current user is the owner."""
         post = get_object_or_404(Post, id=pk)
-        if post.user != request.user:
+        if post.created_by.user != request.user:
             return Response({"error": "You can only delete your own posts."}, status=status.HTTP_403_FORBIDDEN)
 
         post.delete()
         return Response({"message": f"Post {pk} deleted"}, status=status.HTTP_204_NO_CONTENT)
-
 
 # ------------------ EVENTS ------------------
 class EventListCreateView(APIView):
