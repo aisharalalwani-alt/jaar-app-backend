@@ -97,7 +97,6 @@ class EventListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 class EventDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -115,7 +114,9 @@ class EventDetailView(APIView):
         Partial updates allowed.
         """
         event = get_object_or_404(Event, id=pk)
-        if event.created_by != request.user:
+
+        # ✅ Fix: Compare with event.created_by.user, not request.user
+        if event.created_by.user != request.user:
             return Response({"error": "You can only edit your own events."}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = EventSerializer(event, data=request.data, partial=True, context={'request': request})
@@ -129,12 +130,13 @@ class EventDetailView(APIView):
         Delete an event if the current user is the creator.
         """
         event = get_object_or_404(Event, id=pk)
-        if event.created_by != request.user:
+
+        # ✅ Fix: Compare with event.created_by.user, not request.user
+        if event.created_by.user != request.user:
             return Response({"error": "You can only delete your own events."}, status=status.HTTP_403_FORBIDDEN)
 
         event.delete()
         return Response({"message": f"Event {pk} deleted"}, status=status.HTTP_204_NO_CONTENT)
-
 
 # ------------------ VOLUNTEERS ------------------
 class VolunteerListCreateView(APIView):
