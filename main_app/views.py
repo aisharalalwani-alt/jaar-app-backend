@@ -287,6 +287,9 @@ class MyNeighborProfileView(APIView):
         neighbor = get_object_or_404(NeighborProfile, user=request.user)
         profile_data = NeighborProfileSerializer(neighbor).data
 
+        # Check if profile is complete
+        required_fields = ["phone", "street_name", "postal_code", "city"]
+        profile_complete = all(profile_data.get(field) for field in required_fields)
         # Get posts created by this user
         posts = Post.objects.filter(created_by=neighbor)
         posts_data = PostSerializer(posts, many=True).data
@@ -305,6 +308,7 @@ class MyNeighborProfileView(APIView):
 
         return Response({
             "profile": profile_data,
+            "profile_complete": profile_complete,
             "posts": posts_data,
             "created_events": created_events_data,
             "joined_events": joined_events_data

@@ -36,16 +36,17 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 # ------------------ VOLUNTEER ------------------
+ 
 class VolunteerSerializer(serializers.ModelSerializer):
-    # Represent events by their id
     events = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Event.objects.all()
     )
+    total_events = serializers.IntegerField(read_only=True)  # الحقل الجديد
 
     class Meta:
         model = Volunteer
-        fields = ['id', 'name', 'phone', 'events']
-        read_only_fields = ['id']
+        fields = ['id', 'name', 'phone', 'events', 'total_events']
+        read_only_fields = ['id', 'total_events']
 
 
 # ------------------ EVENT ------------------
