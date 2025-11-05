@@ -18,7 +18,7 @@ class NeighborProfile(models.Model):
 class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
-    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    image = models.ImageField(upload_to='media/posts/', blank=True, null=True)
     created_by = models.ForeignKey(NeighborProfile, on_delete=models.CASCADE, related_name='posts')
     created_at = models.DateTimeField(auto_now_add=True)
 

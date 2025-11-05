@@ -3,8 +3,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     PostListCreateView, PostDetailView,
     EventListCreateView, EventDetailView,
-    VolunteerListCreateView, VolunteerDetailView,
-    NeighborListCreateView, JoinEventView, SignupUserView, LogoutView, MyNeighborProfileView,
+    VolunteerListCreateView, VolunteerDetailView, DeleteMyAccountView,
+    NeighborListCreateView, JoinEventView, SignupUserView, LogoutView, MyNeighborProfileView, EventVolunteersView, NeighborDetailView,
 )
 
 urlpatterns = [
@@ -19,19 +19,18 @@ urlpatterns = [
     # Volunteers
     path('volunteers/', VolunteerListCreateView.as_view(), name='volunteers_list_create'),
     path('volunteers/<int:pk>/', VolunteerDetailView.as_view(), name='volunteer_detail'),
+    path('event-volunteers/<int:event_id>/', EventVolunteersView.as_view(), name='event-volunteers'),
 
     # Neighbors
     path('neighbors/', NeighborListCreateView.as_view(), name='neighbors_list_create'),
+    path('neighbors/<int:pk>/', NeighborDetailView.as_view(), name='neighbor-detail'),
     path('join-event/<int:event_id>/', JoinEventView.as_view(), name='join-event'),
     path('my-profile/', MyNeighborProfileView.as_view(), name='my_neighbor_profile'),
-
-
 
     # JWT Authentication
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('signup/', SignupUserView.as_view(), name='signup'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    
-]
- 
+    path("delete-account/", DeleteMyAccountView.as_view(), name="delete-account"),
+] 

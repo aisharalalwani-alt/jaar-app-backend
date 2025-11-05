@@ -15,11 +15,20 @@ class NeighborProfileSerializer(serializers.ModelSerializer):
 # ------------------ POST ------------------
 class PostSerializer(serializers.ModelSerializer):
     created_by = serializers.StringRelatedField(read_only=True)
+    image = serializers.ImageField(required=False)   
 
     class Meta:
         model = Post
-        fields = ['id', 'created_by', 'title', 'image','content', 'created_at']
+        fields = ['id', 'created_by', 'title', 'image', 'content', 'created_at']
         read_only_fields = ['id', 'created_by', 'created_at']
+
+    def to_representation(self, instance):
+         
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+        if instance.image and request:
+            ret['image'] = request.build_absolute_uri(instance.image.url)
+        return ret
 
     def create(self, validated_data):
         validated_data['created_by'] = self.context['request'].user.neighborprofile
@@ -43,6 +52,7 @@ class VolunteerSerializer(serializers.ModelSerializer):
 class EventNestedVolunteerSerializer(serializers.ModelSerializer):
     # Nested serializer for volunteers in event
     class Meta:
+        created_by = serializers.CharField(source='created_by.user.username', read_only=True)
         model = Volunteer
         fields = ['id', 'name', 'phone']
 

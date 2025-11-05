@@ -1,6 +1,10 @@
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .serializers import PostSerializer
+from rest_framework import generics
+from django.db import models
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,13 +13,15 @@ from .serializers import PostSerializer, EventSerializer, VolunteerSerializer, N
 from rest_framework.permissions import AllowAny, IsAuthenticated,  IsAdminUser 
 
 # ------------------ POSTS ------------------
+
 class PostListCreateView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]  
 
     def get(self, request):
         """List all posts ordered by creation date descending."""
         posts = Post.objects.all().order_by('-created_at')
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostSerializer(posts, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request):
@@ -27,55 +33,33 @@ class PostListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class PostDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        """Retrieve a single post by its ID."""
         post = get_object_or_404(Post, id=pk)
-        serializer = PostSerializer(post)
+        serializer = PostSerializer(post, context={'request': request})
         return Response(serializer.data)
 
     def put(self, request, pk):
-        """Update only title and content if the user owns the post."""
         post = get_object_or_404(Post, id=pk)
         if post.created_by.user != request.user:
-            return Response(
-                {"error": "You can only edit your own posts."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-         
-        allowed_fields = {
-            key: request.data[key]
-            for key in ["title", "content"]
-            if key in request.data
-        }
-
-        serializer = PostSerializer(
-            post,
-            data=allowed_fields,
-            partial=True,
-            context={'request': request}
-        )
-
+            return Response({"error": "You can only edit your own posts."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        """Delete a post if the current user is the owner."""
         post = get_object_or_404(Post, id=pk)
         if post.created_by.user != request.user:
             return Response({"error": "You can only delete your own posts."}, status=status.HTTP_403_FORBIDDEN)
-
         post.delete()
         return Response({"message": f"Post {pk} deleted"}, status=status.HTTP_204_NO_CONTENT)
 
-# ------------------ EVENTS ------------------
+
+    # ------------------ EVENTS ------------------
 class EventListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -149,9 +133,18 @@ class VolunteerListCreateView(APIView):
 
     def get(self, request):
         """
-        List all volunteers ordered by joined date descending.
+        List all volunteers, or top 10 volunteers if ?top=true.
         """
-        volunteers = Volunteer.objects.all().order_by('-joined_at')
+        top = request.query_params.get('top', 'false').lower() == 'true'
+
+        if top:
+             
+             volunteers = Volunteer.objects.annotate(
+                total_events=models.Count('events')
+            ).order_by('-total_events')[:10]
+        else:
+            volunteers = Volunteer.objects.all().order_by('-id')
+
         serializer = VolunteerSerializer(volunteers, many=True)
         return Response(serializer.data)
 
@@ -195,7 +188,19 @@ class VolunteerDetailView(APIView):
         volunteer = get_object_or_404(Volunteer, id=pk)
         volunteer.delete()
         return Response({"message": f"Volunteer {pk} deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+# ------------------ EVENT VOLUNTEERS ------------------
 
+class EventVolunteersView(APIView):
+    permission_classes = [IsAuthenticated]  
+
+    def get(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+        volunteers = event.volunteers.all()
+        serializer = VolunteerSerializer(volunteers, many=True)
+        return Response(serializer.data)
+
+ 
 
 # ------------------ NEIGHBORS ------------------
 class NeighborListCreateView(APIView):
@@ -227,30 +232,37 @@ class NeighborListCreateView(APIView):
 
 
 class NeighborDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    ermission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         """
-        Retrieve a neighbor profile by ID.
+        Retrieve a neighbor profile by ID along with their posts and events.
         """
         neighbor = get_object_or_404(NeighborProfile, id=pk)
-        serializer = NeighborProfileSerializer(neighbor)
-        return Response(serializer.data)
+        profile_data = NeighborProfileSerializer(neighbor).data
 
-    def put(self, request, pk):
-        """
-        Update a neighbor profile if the current user is the owner.
-        Partial updates allowed.
-        """
-        neighbor = get_object_or_404(NeighborProfile, id=pk)
-        if neighbor.user != request.user:
-            return Response({"error": "You can only update your own profile."}, status=status.HTTP_403_FORBIDDEN)
+        # Posts created by this neighbor
+        posts = Post.objects.filter(created_by=neighbor)
+        posts_data = PostSerializer(posts, many=True).data
 
-        serializer = NeighborProfileSerializer(neighbor, data=request.data, partial=True, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Events created by this neighbor
+        created_events = Event.objects.filter(created_by=neighbor)
+        created_events_data = EventSerializer(created_events, many=True).data
+
+        # Events the neighbor joined as a volunteer
+        volunteer_entries = Volunteer.objects.filter(
+            name=neighbor.user.username
+        ) | Volunteer.objects.filter(phone=neighbor.phone)
+
+        joined_events = Event.objects.filter(volunteers__in=volunteer_entries).distinct()
+        joined_events_data = EventSerializer(joined_events, many=True).data
+
+        return Response({
+            "profile": profile_data,
+            "posts": posts_data,
+            "created_events": created_events_data,
+            "joined_events": joined_events_data
+        })
 
     def delete(self, request, pk):
         """
@@ -386,5 +398,14 @@ class LogoutView(APIView):
             return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+# ------------------ DELETE MY ACCOUNT ------------------
+class DeleteMyAccountView(APIView):
+    def delete(self, request):
+        profile = get_object_or_404(NeighborProfile, user=request.user)
+        profile.delete()
+        request.user.delete()
+        return Response({"message": "Account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
 
  # End of views.py
