@@ -25,7 +25,7 @@ Users can create profiles, share updates, join or host events, and interact with
 
 ## 🗂️ ERD Diagram
 
- ![alt text](Flowchart-1.jpg)
+  ![alt text](Flowchart.jpg)
 ---
 
 ## 🚦 Routing Table
